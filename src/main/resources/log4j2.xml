@@ -5,7 +5,7 @@
         <RollingFile
                 name="rollingFile"
                 fileName="./application.log"
-                filePattern="./application.%i.log.gz"
+                filePattern="./application.%i.log"
                 ignoreExceptions="false">
 
             <ThresholdFilter level="info"  onMatch="ACCEPT" onMismatch="DENY"/>
