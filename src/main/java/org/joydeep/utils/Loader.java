@@ -6,8 +6,6 @@ import org.joydeep.model.District;
 import org.joydeep.model.Districts;
 import org.joydeep.model.State;
 import org.joydeep.model.States;
-import org.joydeep.service.Configuration;
-import org.joydeep.utils.HttpGet;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -41,6 +39,7 @@ public class Loader {
     public static void loadProperties(String filename) throws IOException {
         FileReader fr = new FileReader(filename);
         Properties properties = new Properties();
+        log.info("Environment Variables: " + System.getenv());
         properties.load(fr);
         Configuration.getInstance().setProperties(properties);
         log.info("Properties file loaded: "+filename);
@@ -58,6 +57,5 @@ public class Loader {
         );
 
         return gson.fromJson(jsonData, Districts.class);
-
     }
 }

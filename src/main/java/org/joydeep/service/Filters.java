@@ -7,12 +7,12 @@ import java.util.function.Predicate;
 
 public class Filters {
 
-    public static Predicate<Center> agePredicate(int minAge, int maxAge){
+    public static Predicate<Center> agePredicate(int minAge){
 
         return center -> {
 
             for (Session session : center.getSessions()){
-                if(session.getMin_age_limit() >= minAge && session.getMin_age_limit() <= maxAge){
+                if(session.getMin_age_limit() <= minAge ){
                     return true;
                 }
             }

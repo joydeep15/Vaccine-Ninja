@@ -1,6 +1,5 @@
-package org.joydeep.service;
+package org.joydeep.utils;
 
-import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Properties;
@@ -8,7 +7,7 @@ import java.util.Properties;
 public class Configuration {
 
     private static Configuration instance = null;
-    @Getter @Setter private Properties properties;
+    @Setter private Properties properties;
     private Configuration(){}
 
     public static Configuration getInstance(){
@@ -23,6 +22,10 @@ public class Configuration {
 
         }
         return instance;
+    }
+
+    protected Properties getProperties(){
+        return properties;
     }
 
 }

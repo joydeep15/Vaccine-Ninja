@@ -1,0 +1,6 @@
+13-05-2021 01:38:13	Subscribed To Alerts From VaccineNinja for Districts:  [District(district_id=725, district_name=Kolkata)]
+Looking for Open slots for age: 18
+13-05-2021 01:40:34	Subscribed To Alerts From VaccineNinja for Districts:  [District(district_id=725, district_name=Kolkata), null]
+Looking for Open slots for age: 18
+13-05-2021 01:44:16	Subscribed To Alerts From VaccineNinja for Districts:  [District(district_id=725, district_name=Kolkata), District(district_id=735, district_name=South 24 Parganas)]
+Looking for Open slots for age: 18

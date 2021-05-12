@@ -1,11 +1,14 @@
 package org.joydeep.service;
 
 import lombok.extern.log4j.Log4j2;
-import org.joydeep.limiter.SimpleRateLimiter;
+import org.joydeep.model.Center;
 import org.joydeep.model.District;
-import org.joydeep.publisher.LogPublisher;
-import org.joydeep.publisher.Publisher;
-import org.joydeep.publisher.TwilioPublisher;
+import org.joydeep.notification.NotificationService;
+import org.joydeep.notification.NotificationServiceFactory;
+import org.joydeep.subscriber.FileSubscriber;
+import org.joydeep.subscriber.LogSubscriber;
+import org.joydeep.subscriber.Subscriber;
+import org.joydeep.utils.Configuration;
 import org.joydeep.utils.Loader;
 import org.joydeep.utils.PropertyReader;
 
@@ -14,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import static org.joydeep.utils.Constants.*;
 
@@ -33,47 +37,36 @@ public class BookingService {
         List<District> districtsToMonitor = getDistrictsToMonitor();
         districtsToMonitor.forEach( d -> log.info("Monitoring district: "+d));
 
-        List<Publisher> publishers = new ArrayList<Publisher>(){{
-           add(new TwilioPublisher(
-                   PropertyReader.getTwilioSID(), PropertyReader.getTwilioAuthToken(), PropertyReader.getTwilioMessagingSID(),
-                   new SimpleRateLimiter(1, TimeUnit.MINUTES), PropertyReader.getTwilioNumbers()
-           ));
-           add(new LogPublisher());
+        List<Predicate<Center>> filters = new ArrayList<Predicate<Center>>(){{
+            add(Filters.availabilityPredicate());
+            add(Filters.agePredicate(PropertyReader.getMinAge()));
         }};
 
-        publishers.forEach( p -> p.publish("Subscribed To Alerts From VaccineNinja for Districts:  "+districtsToMonitor
-                +"\nLooking for Open slots for age: "+getMinAge()));
+        NotificationService notificationService = NotificationServiceFactory.generateNotificationService(PropertyReader.getSubscribers());
+        notificationService.notifyAll("Subscribed To Alerts From VaccineNinja for Districts:  "+districtsToMonitor
+                +"\nLooking for Open slots for age: "+ PropertyReader.getMinAge());
 
         ScheduledExecutorService sx = Executors.newScheduledThreadPool(1);
-        sx.scheduleAtFixedRate(new FindCentersTask(districtsToMonitor, getMinAge(), publishers), 0, getPollingInterval(), TimeUnit.SECONDS);
+        sx.scheduleAtFixedRate(new FindCentersTask(districtsToMonitor, notificationService, filters),
+                0, PropertyReader.getPollingInterval(), TimeUnit.SECONDS);
 
-    }
-
-    private static Integer getMinAge() {
-        String ageProperty = Configuration.getInstance().getProperties()
-                .getProperty(MIN_AGE);
-        return ageProperty == null ? DEFAULT_MIN_AGE : Integer.parseInt(ageProperty);
-    }
-
-    private static Integer getPollingInterval() {
-        String pollingIntervalProperty = Configuration.getInstance().getProperties()
-                .getProperty(INTERVAL_SECONDS);
-        return pollingIntervalProperty == null ? DEFAULT_POLLING_INTERVAL_SECONDS : Integer.parseInt(pollingIntervalProperty);
     }
 
     public static List<District> getDistrictsToMonitor() throws IOException {
-        String propertyVal = Configuration.getInstance().getProperties().getProperty(MONITORED_DISTRICTS);
+        String propertyVal = PropertyReader.getMonitoredDistricts();
         if(propertyVal == null){
-            log.error("Unable to load property: "+ MONITORED_DISTRICTS);
+            log.error("Unable to load property: " + MONITORED_DISTRICTS);
             throw new NullPointerException("Unable to load property: "+ MONITORED_DISTRICTS);
         }
         String[] toMonitor = propertyVal.split(",");
         Map<String, District> districtMap = Loader.getDistrictMap();
         List<District> monitoringDistricts = new ArrayList<>();
+        log.trace(districtMap);
 
         for(String district : toMonitor){
-            if(districtMap.containsKey(district.toLowerCase(Locale.ROOT))){
-                monitoringDistricts.add(districtMap.get(district.toLowerCase(Locale.ROOT)));
+            String key = district.trim().toLowerCase(Locale.ROOT);
+            if(districtMap.containsKey(key)){
+                monitoringDistricts.add(districtMap.get(key));
             }else {
                 log.error("No mapping found for district: "+district);
             }

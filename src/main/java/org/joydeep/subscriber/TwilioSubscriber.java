@@ -1,8 +1,7 @@
-package org.joydeep.publisher;
+package org.joydeep.subscriber;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
@@ -12,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Log4j2
-public class TwilioPublisher implements Publisher {
+public class TwilioSubscriber implements Subscriber {
 
 
 
@@ -23,9 +22,9 @@ public class TwilioPublisher implements Publisher {
     @Getter public final List<PhoneNumber> numbers;
     @Getter public final SimpleRateLimiter simpleRateLimiter;
 
-    public TwilioPublisher(@NonNull String sid, @NonNull String auth_token, @NonNull String messaging_sid,
-                           @NonNull SimpleRateLimiter simpleRateLimiter,
-                           @NonNull List<String> stringNums){
+    public TwilioSubscriber(@NonNull String sid, @NonNull String auth_token, @NonNull String messaging_sid,
+                            @NonNull SimpleRateLimiter simpleRateLimiter,
+                            @NonNull List<String> stringNums){
         ACCOUNT_SID = sid;
         AUTH_TOKEN = auth_token;
         this.MESSAGING_SERVICE_ID = messaging_sid;

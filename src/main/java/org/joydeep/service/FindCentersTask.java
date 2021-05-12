@@ -8,7 +8,8 @@ import lombok.extern.log4j.Log4j2;
 import org.joydeep.model.Center;
 import org.joydeep.model.Centers;
 import org.joydeep.model.District;
-import org.joydeep.publisher.Publisher;
+import org.joydeep.notification.NotificationService;
+import org.joydeep.subscriber.Subscriber;
 import org.joydeep.utils.HttpGet;
 
 import java.io.IOException;
@@ -23,8 +24,8 @@ import java.util.function.Predicate;
 public class FindCentersTask implements Runnable{
 
     @Getter private final List<District> districts;
-    @Getter private final Integer min_age;
-    @Getter private final List<Publisher> publishers;
+    @Getter private final NotificationService notificationService;
+    @Getter private final List<Predicate<Center>> filters;
     private static final String fetchCenters = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=%d&date=%s";
     private static final Integer weeksInFuture = 6;
 
@@ -38,18 +39,15 @@ public class FindCentersTask implements Runnable{
 
         log.info("Starting PollingTask. Thead-" + Thread.currentThread().getId());
 
-        List<Predicate<Center>> filters = new ArrayList<Predicate<Center>>(){{
-            add(Filters.availabilityPredicate());
-            add(Filters.agePredicate(min_age, min_age+1));
-        }};
-
-        Centers centers = getAllCenters(districts, weeksInFuture, filters);
+        Centers centers = getAllCenters(districts, weeksInFuture, getFilters());
         log.info(centers);
 
-//        if(!centers.getCenters().isEmpty()){
-            //found available vaccine Centers
-            publishers.forEach(publisher -> publisher.publish("Update: Center found. Available Centers: "+centers));
-//        }
+        if(!centers.getCenters().isEmpty()){
+//            found available vaccine Centers
+            notificationService.notifyAll("Update: Center(s) found. Available Centers: "+centers);
+        }
+
+        log.info("No Vaccine Centers Found");
 
     }
 
@@ -58,14 +56,15 @@ public class FindCentersTask implements Runnable{
         Centers centers = new Centers();
         centers.setCenters(new ArrayList<>());
         for (District district : districts){
-            Centers centersForDistrict = getCentersForDistrict(district, weeks, filters);
+            log.info("Fetching Centers for District: "+district);
+            Centers centersForDistrict = getFilteredCenters(district, weeks, filters);
             centers.getCenters().addAll(centersForDistrict.getCenters());
         }
         return centers;
     }
 
-    private Centers getCentersForDistrict(District district, int weeks,
-                                              List<Predicate<Center>> filters) throws IOException {
+    private Centers getFilteredCenters(District district, int weeks,
+                                       List<Predicate<Center>> filters) throws IOException {
 
         LocalDateTime myDateObj = LocalDateTime.now();
         Centers centers = new Centers();
@@ -90,6 +89,7 @@ public class FindCentersTask implements Runnable{
 
     private Centers getCentersForDate(District district, String date) throws IOException {
 
+        log.info("Fetching center for district: "+district+" and date: "+date);
         String jsonData = HttpGet.sendHttpGet(
                 String.format(fetchCenters, district.getDistrict_id(), date)
         );

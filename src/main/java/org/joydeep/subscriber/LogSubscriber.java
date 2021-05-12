@@ -1,9 +1,9 @@
-package org.joydeep.publisher;
+package org.joydeep.subscriber;
 
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public class LogPublisher implements Publisher{
+public class LogSubscriber implements Subscriber {
 
 
     @Override
