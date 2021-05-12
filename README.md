@@ -1,6 +1,8 @@
 # Vaccine-Ninja
 Tool for booking vaccine slots on cowin
 
+## Steps
+Pick the latest jar [release](https://github.com/joydeep15/Vaccine-Ninja/releases)
 Run as `java -jar Vaccine-Ninja-jar-with-dependencies.jar config.properties`
 
 Sample config.properties:
