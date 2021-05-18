@@ -9,7 +9,6 @@ import org.joydeep.model.Center;
 import org.joydeep.model.Centers;
 import org.joydeep.model.District;
 import org.joydeep.notification.NotificationService;
-import org.joydeep.subscriber.Subscriber;
 import org.joydeep.utils.HttpGet;
 
 import java.io.IOException;
@@ -38,8 +37,14 @@ public class FindCentersTask implements Runnable{
     public void run() {
 
         log.info("Starting PollingTask. Thead-" + Thread.currentThread().getId());
+        Centers centers = null;
+        try {
+            centers = getAllCenters(districts, weeksInFuture, getFilters());
+        }catch (IOException e){
+            log.error(e);
+            return;
+        }
 
-        Centers centers = getAllCenters(districts, weeksInFuture, getFilters());
         log.info(centers);
 
         if(!centers.getCenters().isEmpty()){
